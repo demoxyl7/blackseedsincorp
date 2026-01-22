@@ -102,14 +102,14 @@ export function BookingSummary({
           {/* Price Breakdown */}
           <div className="border-t border-border pt-4 space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Parking ({duration}h × ${HOURLY_RATE})</span>
-              <span>${basePrice.toFixed(2)}</span>
+              <span className="text-muted-foreground">Parking ({duration}h × ₦{HOURLY_RATE})</span>
+              <span>₦{basePrice.toFixed(2)}</span>
             </div>
             
             {suvCharge > 0 && (
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">SUV Surcharge ({duration}h × ${SUV_SURCHARGE})</span>
-                <span>${suvCharge.toFixed(2)}</span>
+                <span className="text-muted-foreground">SUV Surcharge ({duration}h × ₦{SUV_SURCHARGE})</span>
+                <span>₦{suvCharge.toFixed(2)}</span>
               </div>
             )}
 
@@ -119,7 +119,7 @@ export function BookingSummary({
               return (
                 <div key={addonId} className="flex justify-between text-sm">
                   <span className="text-muted-foreground">{addon.name}</span>
-                  <span>${addonPrice.toFixed(2)}</span>
+                  <span>₦{addonPrice.toFixed(2)}</span>
                 </div>
               );
             })}
@@ -130,7 +130,7 @@ export function BookingSummary({
             <div className="flex justify-between items-center">
               <span className="font-display font-semibold">Total</span>
               <span className="font-display text-2xl font-bold text-primary">
-                ${totalPrice.toFixed(2)}
+                ₦{totalPrice.toFixed(2)}
               </span>
             </div>
           </div>

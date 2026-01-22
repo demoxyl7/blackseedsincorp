@@ -1,0 +1,171 @@
+# Query: $
+# ContextLines: 1
+
+62 results - 14 files
+
+blackseedsincorp\components.json:
+  1  {
+  2:   "$schema": "https://ui.shadcn.com/schema.json",
+  3    "style": "default",
+
+blackseedsincorp\src\components\booking\AddonServices.tsx:
+  102                  <p className="font-display font-bold text-lg">
+  103:                   ₦{addon.price}
+  104                  </p>
+
+blackseedsincorp\src\components\booking\BookingSummary.tsx:
+  104              <div className="flex justify-between text-sm">
+  105:               <span className="text-muted-foreground">Parking ({duration}h × ₦{HOURLY_RATE})</span>
+  106:               <span>₦{basePrice.toFixed(2)}</span>
+  107              </div>
+
+  110                <div className="flex justify-between text-sm">
+  111:                 <span className="text-muted-foreground">SUV Surcharge ({duration}h × ₦{SUV_SURCHARGE})</span>
+  112:                 <span>₦{suvCharge.toFixed(2)}</span>
+  113                </div>
+
+  121                    <span className="text-muted-foreground">{addon.name}</span>
+  122:                   <span>₦{addonPrice.toFixed(2)}</span>
+  123                  </div>
+
+  132                <span className="font-display text-2xl font-bold text-primary">
+  133:                 ₦{totalPrice.toFixed(2)}
+  134                </span>
+
+blackseedsincorp\src\components\booking\ParkingMap.tsx:
+   16        spots.push({
+   17:         id: `${row}${i}`,
+   18:         spotNumber: `${row}${i}`,
+   19          floor: 1,
+
+  148                          className={getSpotStyles(spot)}
+  149:                         aria-label={`Parking spot ${spot.spotNumber}${spot.hasEvCharger ? ' with EV charger' : ''}${!spot.isAvailable ? ' (occupied)' : ''}`}
+  150                        >
+
+  186                          className={getSpotStyles(spot)}
+  187:                         aria-label={`Parking spot ${spot.spotNumber}${spot.hasEvCharger ? ' with EV charger' : ''}${!spot.isAvailable ? ' (occupied)' : ''}`}
+  188                        >
+
+blackseedsincorp\src\components\booking\TimeSlotPicker.tsx:
+  79              >
+  80:               {hours < 24 ? `${hours}h` : '1 day'}
+  81              </button>
+
+blackseedsincorp\src\components\home\FeaturesSection.tsx:
+  66                className="group bg-card rounded-2xl p-6 shadow-card hover:shadow-card-hover transition-all duration-300 hover:-translate-y-1 animate-fade-in"
+  67:               style={{ animationDelay: `${index * 100}ms` }}
+  68              >
+  69:               <div className={`inline-flex h-12 w-12 items-center justify-center rounded-xl ${colorClasses[feature.color as keyof typeof colorClasses]} mb-4 group-hover:scale-110 transition-transform`}>
+  70                  <feature.icon className="h-6 w-6" />
+
+blackseedsincorp\src\components\ui\chart.tsx:
+   39    const uniqueId = React.useId();
+   40:   const chartId = `chart-${id || uniqueId.replace(/:/g, "")}`;
+   41  
+
+   73              ([theme, prefix]) => `
+   74: ${prefix} [data-chart=${id}] {
+   75: ${colorConfig
+   76    .map(([key, itemConfig]) => {
+   77      const color = itemConfig.theme?.[theme as keyof typeof itemConfig.theme] || itemConfig.color;
+   78:     return color ? `  --color-${key}: ${color};` : null;
+   79    })
+
+  128        const [item] = payload;
+  129:       const key = `${labelKey || item.dataKey || item.name || "value"}`;
+  130        const itemConfig = getPayloadConfigFromPayload(config, item, key);
+
+  163            {payload.map((item, index) => {
+  164:             const key = `${nameKey || item.name || item.dataKey || "value"}`;
+  165              const itemConfig = getPayloadConfigFromPayload(config, item, key);
+
+  249        {payload.map((item) => {
+  250:         const key = `${nameKey || item.dataKey || "value"}`;
+  251          const itemConfig = getPayloadConfigFromPayload(config, item, key);
+
+blackseedsincorp\src\components\ui\form.tsx:
+  48      name: fieldContext.name,
+  49:     formItemId: `${id}-form-item`,
+  50:     formDescriptionId: `${id}-form-item-description`,
+  51:     formMessageId: `${id}-form-item-message`,
+  52      ...fieldState,
+
+  92          id={formItemId}
+  93:         aria-describedby={!error ? `${formDescriptionId}` : `${formDescriptionId} ${formMessageId}`}
+  94          aria-invalid={!!error}
+
+blackseedsincorp\src\components\ui\progress.tsx:
+  16        className="h-full w-full flex-1 bg-primary transition-all"
+  17:       style={{ transform: `translateX(-${100 - (value || 0)}%)` }}
+  18      />
+
+blackseedsincorp\src\components\ui\sidebar.tsx:
+   67        // This sets the cookie to keep the sidebar state.
+   68:       document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`;
+   69      },
+
+  535    const width = React.useMemo(() => {
+  536:     return `${Math.floor(Math.random() * 40) + 50}%`;
+  537    }, []);
+
+blackseedsincorp\src\hooks\use-mobile.tsx:
+  8    React.useEffect(() => {
+  9:     const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
+  10      const onChange = () => {
+
+blackseedsincorp\src\pages\AdminPage.tsx:
+   21    { label: 'Active Vehicles', value: '89', change: '+5%', icon: Car, color: 'success' },
+   22:   { label: 'Revenue Today', value: '₦2,450', change: '+18%', icon: DollarSign, color: 'warning' },
+   23    { label: 'Occupancy Rate', value: '78%', change: '+3%', icon: TrendingUp, color: 'accent' },
+
+   26  const recentBookings = [
+   27:   { id: 'BK001', plate: 'ABC-1234', type: 'Car', duration: '3h', status: 'active', amount: '₦1500' },
+   28:   { id: 'BK002', plate: 'XYZ-5678', type: 'SUV', duration: '6h', status: 'active', amount: '₦4000' },
+   29:   { id: 'BK003', plate: 'DEF-9012', type: 'Car', duration: '2h', status: 'completed', amount: '₦1000' },
+   30:   { id: 'BK004', plate: 'GHI-3456', type: 'SUV', duration: '4h', status: 'active', amount: '₦2000' },
+   31:   { id: 'BK005', plate: 'JKL-7890', type: 'Car', duration: '1h', status: 'pending', amount: '₦500' },
+   32  ];
+
+  108                    className="bg-card rounded-2xl border border-border p-6 shadow-card animate-fade-in"
+  109:                   style={{ animationDelay: `${index * 100}ms` }}
+  110                  >
+
+blackseedsincorp\src\pages\PricingPage.tsx:
+   51  const additionalPricing = [
+   52:   { service: 'SUV Surcharge', price: '+₦1500/hour' },
+   53:   { service: 'EV Charging', price: '₦2000/hour' },
+   54:   { service: 'Basic Car Wash', price: '₦2000' },
+   55:   { service: 'Premium Detailing', price: '$4000' },
+   56:   { service: 'Premium Spot', price: '+₦5000' },
+   57  ];
+
+   88                    )}
+   89:                   style={{ animationDelay: `${index * 100}ms` }}
+   90                  >
+
+  100                      <div className="flex items-baseline justify-center gap-1">
+  101:                       <span className="font-display text-4xl font-bold">₦{plan.price}</span>
+  102                        <span className="text-muted-foreground">{plan.unit}</span>
+
+blackseedsincorp\src\pages\ServicesPage.tsx:
+  12      features: ['Cars & SUVs only', 'Covered options available', 'Near entrance spots'],
+  13:     price: '₦500/hour',
+  14      color: 'primary',
+
+  20      features: ['Level 2 & DC fast charging', 'Real-time availability', 'Automatic billing'],
+  21:     price: '₦2000/hour',
+  22      color: 'success',
+
+  28      features: ['Exterior wash', 'Rinse and dry', '20 min service'],
+  29:     price: '₦2000',
+  30      color: 'accent',
+
+  36      features: ['Full interior clean', 'Exterior polish & wax', 'Leather conditioning'],
+  37:     price: '₦4000',
+  38      color: 'warning',
+
+  73                    className="bg-card rounded-2xl border border-border p-8 shadow-card hover:shadow-card-hover transition-all duration-300 animate-fade-in"
+  74:                   style={{ animationDelay: `${index * 100}ms` }}
+  75                  >
+  76:                   <div className={`inline-flex h-14 w-14 items-center justify-center rounded-2xl ${colorClasses[service.color as keyof typeof colorClasses]} mb-6`}>
+  77                      <service.icon className="h-7 w-7" />

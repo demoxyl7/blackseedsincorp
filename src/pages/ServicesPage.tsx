@@ -10,7 +10,7 @@ const services = [
     title: 'Standard Parking',
     description: 'Safe and secure parking for cars and SUVs. Well-lit spaces with easy access.',
     features: ['Cars & SUVs only', 'Covered options available', 'Near entrance spots'],
-    price: '$5/hour',
+    price: '₦500/hour',
     color: 'primary',
   },
   {
@@ -18,7 +18,7 @@ const services = [
     title: 'EV Charging',
     description: 'Fast charging stations for electric and hybrid vehicles. Multiple charging speeds available.',
     features: ['Level 2 & DC fast charging', 'Real-time availability', 'Automatic billing'],
-    price: '$8/hour',
+    price: '₦2000/hour',
     color: 'success',
   },
   {
@@ -26,7 +26,7 @@ const services = [
     title: 'Basic Car Wash',
     description: 'Quick exterior wash to keep your car looking fresh. Done while you park.',
     features: ['Exterior wash', 'Rinse and dry', '20 min service'],
-    price: '$15',
+    price: '₦2000',
     color: 'accent',
   },
   {
@@ -34,7 +34,7 @@ const services = [
     title: 'Premium Detailing',
     description: 'Complete interior and exterior cleaning with professional waxing and detailing.',
     features: ['Full interior clean', 'Exterior polish & wax', 'Leather conditioning'],
-    price: '$45',
+    price: '₦4500',
     color: 'warning',
   },
 ];

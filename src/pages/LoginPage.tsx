@@ -20,7 +20,7 @@ const LoginPage = () => {
               <Car className="h-5 w-5 text-primary-foreground" />
             </div>
             <span className="font-display text-xl font-bold">
-              Park<span className="text-gradient">Hub</span>
+              Blackseeds<span className="text-gradient">Incorp</span>
             </span>
           </Link>
 

@@ -49,11 +49,11 @@ const pricingPlans = [
 ];
 
 const additionalPricing = [
-  { service: 'SUV Surcharge', price: '+$2/hour' },
-  { service: 'EV Charging', price: '$8/hour' },
-  { service: 'Basic Car Wash', price: '$15' },
-  { service: 'Premium Detailing', price: '$45' },
-  { service: 'Premium Spot', price: '+$10' },
+  { service: 'SUV Surcharge', price: '+₦1500/hour' },
+  { service: 'EV Charging', price: '₦2000/hour' },
+  { service: 'Basic Car Wash', price: '₦2000' },
+  { service: 'Premium Detailing', price: '₦4500' },
+  { service: 'Premium Spot', price: '+₦5000' },
 ];
 
 const PricingPage = () => {
@@ -98,7 +98,7 @@ const PricingPage = () => {
                     <h3 className="font-display text-xl font-bold mb-2">{plan.name}</h3>
                     <p className="text-sm text-muted-foreground mb-4">{plan.description}</p>
                     <div className="flex items-baseline justify-center gap-1">
-                      <span className="font-display text-4xl font-bold">${plan.price}</span>
+                      <span className="font-display text-4xl font-bold">₦{plan.price}</span>
                       <span className="text-muted-foreground">{plan.unit}</span>
                     </div>
                   </div>

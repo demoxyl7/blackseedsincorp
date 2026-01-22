@@ -19,16 +19,16 @@ import { cn } from '@/lib/utils';
 const stats = [
   { label: 'Total Bookings', value: '1,234', change: '+12%', icon: Calendar, color: 'primary' },
   { label: 'Active Vehicles', value: '89', change: '+5%', icon: Car, color: 'success' },
-  { label: 'Revenue Today', value: '$2,450', change: '+18%', icon: DollarSign, color: 'warning' },
+  { label: 'Revenue Today', value: '₦2450', change: '+18%', icon: DollarSign, color: 'warning' },
   { label: 'Occupancy Rate', value: '78%', change: '+3%', icon: TrendingUp, color: 'accent' },
 ];
 
 const recentBookings = [
-  { id: 'BK001', plate: 'ABC-1234', type: 'Car', duration: '3h', status: 'active', amount: '$15' },
-  { id: 'BK002', plate: 'XYZ-5678', type: 'SUV', duration: '6h', status: 'active', amount: '$42' },
-  { id: 'BK003', plate: 'DEF-9012', type: 'Car', duration: '2h', status: 'completed', amount: '$10' },
-  { id: 'BK004', plate: 'GHI-3456', type: 'SUV', duration: '4h', status: 'active', amount: '$28' },
-  { id: 'BK005', plate: 'JKL-7890', type: 'Car', duration: '1h', status: 'pending', amount: '$5' },
+  { id: 'BK001', plate: 'ABC-1234', type: 'Car', duration: '3h', status: 'active', amount: '₦1500' },
+  { id: 'BK002', plate: 'XYZ-5678', type: 'SUV', duration: '6h', status: 'active', amount: '₦4000' },
+  { id: 'BK003', plate: 'DEF-9012', type: 'Car', duration: '2h', status: 'completed', amount: '₦1000' },
+  { id: 'BK004', plate: 'GHI-3456', type: 'SUV', duration: '4h', status: 'active', amount: '₦2000' },
+  { id: 'BK005', plate: 'JKL-7890', type: 'Car', duration: '1h', status: 'pending', amount: '₦500' },
 ];
 
 const sidebarItems = [

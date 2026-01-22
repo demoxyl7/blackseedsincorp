@@ -100,7 +100,7 @@ export function AddonServices({ selectedAddons, onToggleAddon, isElectric }: Add
 
               <div className="text-right shrink-0">
                 <p className="font-display font-bold text-lg">
-                  ${addon.price}
+                  ₦{addon.price}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {addon.id === 'ev-charging' ? '/hour' : 'one-time'}

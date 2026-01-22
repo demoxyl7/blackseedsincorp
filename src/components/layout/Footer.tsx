@@ -13,7 +13,7 @@ export function Footer() {
                 <Car className="h-5 w-5 text-primary-foreground" />
               </div>
               <span className="font-display text-xl font-bold text-primary-foreground">
-                ParkHub
+                BlackseedsIncorp
               </span>
             </Link>
             <p className="text-sm text-muted-foreground">
@@ -49,22 +49,22 @@ export function Footer() {
             <ul className="space-y-3 text-sm">
               <li className="flex items-center gap-2 text-muted-foreground">
                 <MapPin className="h-4 w-4 text-primary" />
-                123 Parking Street, City
+                76,Karimu Street,Surulere Lagos City
               </li>
               <li className="flex items-center gap-2 text-muted-foreground">
                 <Phone className="h-4 w-4 text-primary" />
-                +1 (555) 123-4567
+                +234 (803) 268-4135
               </li>
               <li className="flex items-center gap-2 text-muted-foreground">
                 <Mail className="h-4 w-4 text-primary" />
-                hello@parkhub.com
+                hello@blackseedsincorp.com
               </li>
             </ul>
           </div>
         </div>
 
         <div className="border-t border-primary-foreground/10 mt-8 pt-8 text-center text-sm text-muted-foreground">
-          <p>© 2024 ParkHub. All rights reserved.</p>
+          <p>© 2026 Blackseedsincorp. All rights reserved.</p>
         </div>
       </div>
     </footer>
