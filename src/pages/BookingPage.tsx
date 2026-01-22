@@ -5,8 +5,9 @@ import { VehicleSelector } from '@/components/booking/VehicleSelector';
 import { TimeSlotPicker } from '@/components/booking/TimeSlotPicker';
 import { AddonServices } from '@/components/booking/AddonServices';
 import { BookingSummary } from '@/components/booking/BookingSummary';
+import { ParkingMap } from '@/components/booking/ParkingMap';
 import { useToast } from '@/hooks/use-toast';
-import type { VehicleType } from '@/types/booking';
+import type { VehicleType, ParkingSpot } from '@/types/booking';
 
 const BookingPage = () => {
   const { toast } = useToast();
@@ -15,6 +16,9 @@ const BookingPage = () => {
   const [vehicleType, setVehicleType] = useState<VehicleType | null>(null);
   const [licensePlate, setLicensePlate] = useState('');
   const [isElectric, setIsElectric] = useState(false);
+  
+  // Parking spot state
+  const [selectedSpot, setSelectedSpot] = useState<ParkingSpot | null>(null);
   
   // Time state
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
@@ -42,6 +46,7 @@ const BookingPage = () => {
     // TODO: Integrate with Python backend API and Stripe
     console.log('Booking data:', {
       vehicle: { type: vehicleType, licensePlate, isElectric },
+      spot: selectedSpot,
       time: { date: selectedDate, startTime, duration },
       addons: selectedAddons,
     });
@@ -83,11 +88,26 @@ const BookingPage = () => {
                   />
                 </div>
 
-                {/* Step 2: Time */}
+                {/* Step 2: Select Spot */}
                 <div className="bg-card rounded-2xl border border-border p-6 shadow-card animate-slide-up" style={{ animationDelay: '100ms' }}>
                   <div className="flex items-center gap-3 mb-6">
                     <div className="h-8 w-8 rounded-full gradient-primary flex items-center justify-center text-primary-foreground font-bold text-sm">
                       2
+                    </div>
+                    <h2 className="font-display text-xl font-semibold">Select Your Spot</h2>
+                  </div>
+                  <ParkingMap
+                    selectedSpot={selectedSpot}
+                    onSpotSelect={setSelectedSpot}
+                    isElectric={isElectric}
+                  />
+                </div>
+
+                {/* Step 3: Time */}
+                <div className="bg-card rounded-2xl border border-border p-6 shadow-card animate-slide-up" style={{ animationDelay: '200ms' }}>
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="h-8 w-8 rounded-full gradient-primary flex items-center justify-center text-primary-foreground font-bold text-sm">
+                      3
                     </div>
                     <h2 className="font-display text-xl font-semibold">Date & Time</h2>
                   </div>
@@ -101,11 +121,11 @@ const BookingPage = () => {
                   />
                 </div>
 
-                {/* Step 3: Add-ons */}
-                <div className="bg-card rounded-2xl border border-border p-6 shadow-card animate-slide-up" style={{ animationDelay: '200ms' }}>
+                {/* Step 4: Add-ons */}
+                <div className="bg-card rounded-2xl border border-border p-6 shadow-card animate-slide-up" style={{ animationDelay: '300ms' }}>
                   <div className="flex items-center gap-3 mb-6">
                     <div className="h-8 w-8 rounded-full gradient-primary flex items-center justify-center text-primary-foreground font-bold text-sm">
-                      3
+                      4
                     </div>
                     <h2 className="font-display text-xl font-semibold">Add-on Services</h2>
                   </div>
@@ -118,11 +138,12 @@ const BookingPage = () => {
               </div>
 
               {/* Summary Sidebar */}
-              <div className="animate-slide-up" style={{ animationDelay: '300ms' }}>
+              <div className="animate-slide-up" style={{ animationDelay: '400ms' }}>
                 <BookingSummary
                   vehicleType={vehicleType}
                   licensePlate={licensePlate}
                   isElectric={isElectric}
+                  selectedSpot={selectedSpot}
                   selectedDate={selectedDate}
                   startTime={startTime}
                   duration={duration}
