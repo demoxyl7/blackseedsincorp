@@ -1,12 +1,13 @@
 import { format } from 'date-fns';
-import { Car, Calendar, Clock, CreditCard } from 'lucide-react';
+import { Car, Calendar, Clock, CreditCard, CircleParking, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import type { VehicleType, AddonService } from '@/types/booking';
+import type { VehicleType, AddonService, ParkingSpot } from '@/types/booking';
 
 interface BookingSummaryProps {
   vehicleType: VehicleType | null;
   licensePlate: string;
   isElectric: boolean;
+  selectedSpot: ParkingSpot | null;
   selectedDate: Date | undefined;
   startTime: string;
   duration: number;
@@ -29,6 +30,7 @@ export function BookingSummary({
   vehicleType,
   licensePlate,
   isElectric,
+  selectedSpot,
   selectedDate,
   startTime,
   duration,
@@ -48,7 +50,7 @@ export function BookingSummary({
   }, 0);
 
   const totalPrice = basePrice + suvCharge + addonsTotal;
-  const isComplete = vehicleType && licensePlate && selectedDate && startTime && duration;
+  const isComplete = vehicleType && licensePlate && selectedSpot && selectedDate && startTime && duration;
 
   return (
     <div className="bg-card rounded-2xl border border-border p-6 shadow-card sticky top-24">
@@ -67,6 +69,22 @@ export function BookingSummary({
                   ⚡ Electric/Hybrid
                 </span>
               )}
+            </div>
+          </div>
+
+          {/* Parking Spot */}
+          <div className="flex items-start gap-3 p-3 rounded-xl bg-muted">
+            <CircleParking className="h-5 w-5 text-primary mt-0.5" />
+            <div>
+              <p className="font-medium">Spot {selectedSpot.spotNumber}</p>
+              <p className="text-sm text-muted-foreground">
+                Floor {selectedSpot.floor}
+                {selectedSpot.hasEvCharger && (
+                  <span className="inline-flex items-center text-emerald-500 ml-2">
+                    <Zap className="h-3 w-3 mr-1" /> EV Charger
+                  </span>
+                )}
+              </p>
             </div>
           </div>
 
