@@ -1,10 +1,26 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, Car, Zap, Sparkles } from 'lucide-react';
+import { ArrowRight, Zap, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import heroCarImage from '@/assets/hero-car.png';
+import carparkVideo from '@/assets/carpark-backdrop.mp4';
 
 export function HeroSection() {
   return (
     <section className="relative overflow-hidden py-20 lg:py-32">
+      {/* Video backdrop */}
+      <div className="absolute inset-0 -z-20">
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="h-full w-full object-cover opacity-20"
+        >
+          <source src={carparkVideo} type="video/mp4" />
+        </video>
+        <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/60 to-background" />
+      </div>
+
       {/* Background decoration */}
       <div className="absolute inset-0 -z-10">
         <div className="absolute top-20 left-10 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
@@ -60,19 +76,16 @@ export function HeroSection() {
             </div>
           </div>
 
-          {/* Visual */}
+          {/* Visual - Car Image */}
           <div className="relative lg:pl-8">
             <div className="relative rounded-3xl overflow-hidden shadow-2xl animate-fade-in">
-              <div className="aspect-[4/3] gradient-dark flex items-center justify-center">
-                <div className="text-center space-y-6 p-8">
-                  <div className="inline-flex h-24 w-24 items-center justify-center rounded-full gradient-primary shadow-glow animate-float">
-                    <Car className="h-12 w-12 text-primary-foreground" />
-                  </div>
-                  <div>
-                    <p className="font-display text-2xl font-bold text-primary-foreground">Your Spot Awaits</p>
-                    <p className="text-muted-foreground">Quick booking • Easy payment</p>
-                  </div>
-                </div>
+              <div className="aspect-[4/3] relative">
+                <img 
+                  src={heroCarImage} 
+                  alt="Luxury SUV in parking" 
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-background/40 to-transparent" />
               </div>
             </div>
 
