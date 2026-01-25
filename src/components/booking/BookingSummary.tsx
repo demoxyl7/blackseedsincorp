@@ -135,7 +135,7 @@ export function BookingSummary({
             </div>
           </div>
 
-          {/* Payment Button */}
+          {/* Confirm Booking Button */}
           <Button
             variant="hero"
             size="xl"
@@ -143,12 +143,21 @@ export function BookingSummary({
             onClick={onConfirm}
             disabled={isLoading}
           >
-            <CreditCard className="h-5 w-5" />
-            {isLoading ? 'Processing...' : 'Pay with Stripe'}
+            {isLoading ? (
+              <>
+                <div className="h-5 w-5 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+                Processing...
+              </>
+            ) : (
+              <>
+                <CreditCard className="h-5 w-5" />
+                Confirm Booking
+              </>
+            )}
           </Button>
 
           <p className="text-xs text-center text-muted-foreground">
-            Secure payment powered by Stripe
+            Payment can be added later
           </p>
         </div>
       ) : (

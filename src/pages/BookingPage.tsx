@@ -7,10 +7,16 @@ import { AddonServices } from '@/components/booking/AddonServices';
 import { BookingSummary } from '@/components/booking/BookingSummary';
 import { ParkingMap } from '@/components/booking/ParkingMap';
 import { useToast } from '@/hooks/use-toast';
+import { useCreateBooking } from '@/hooks/use-api';
 import type { VehicleType, ParkingSpot } from '@/types/booking';
+import type { CreateBookingRequest } from '@/types/api';
+import { format } from 'date-fns';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 const BookingPage = () => {
   const { toast } = useToast();
+  const createBooking = useCreateBooking();
   
   // Vehicle state
   const [vehicleType, setVehicleType] = useState<VehicleType | null>(null);
@@ -27,6 +33,10 @@ const BookingPage = () => {
   
   // Addons state
   const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
+  
+  // Customer contact info
+  const [customerEmail, setCustomerEmail] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
 
   const handleToggleAddon = (addonId: string) => {
     setSelectedAddons((prev) =>
@@ -36,19 +46,48 @@ const BookingPage = () => {
     );
   };
 
-  const handleConfirmBooking = () => {
-    // This will integrate with Stripe
-    toast({
-      title: "Redirecting to payment...",
-      description: "You'll be taken to Stripe to complete your booking.",
-    });
-    
-    // TODO: Integrate with Python backend API and Stripe
-    console.log('Booking data:', {
-      vehicle: { type: vehicleType, licensePlate, isElectric },
-      spot: selectedSpot,
-      time: { date: selectedDate, startTime, duration },
-      addons: selectedAddons,
+  const handleConfirmBooking = async () => {
+    // Validation
+    if (!vehicleType || !licensePlate || !selectedSpot || !selectedDate || !startTime) {
+      toast({
+        title: "Missing information",
+        description: "Please complete all required fields before booking.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Prepare booking request
+    const bookingRequest: CreateBookingRequest = {
+      vehicle_type: vehicleType,
+      license_plate: licensePlate.toUpperCase(),
+      is_electric: isElectric,
+      spot_id: selectedSpot.id,
+      booking_date: format(selectedDate, 'yyyy-MM-dd'),
+      start_time: startTime,
+      duration_hours: duration,
+      addon_ids: selectedAddons,
+      customer_email: customerEmail || undefined,
+      customer_phone: customerPhone || undefined,
+    };
+
+    // Create booking via API
+    createBooking.mutate(bookingRequest, {
+      onSuccess: (result) => {
+        if (result.success) {
+          // Reset form on success
+          setVehicleType(null);
+          setLicensePlate('');
+          setIsElectric(false);
+          setSelectedSpot(null);
+          setSelectedDate(undefined);
+          setStartTime('');
+          setDuration(2);
+          setSelectedAddons([]);
+          setCustomerEmail('');
+          setCustomerPhone('');
+        }
+      },
     });
   };
 
@@ -135,10 +174,43 @@ const BookingPage = () => {
                     isElectric={isElectric}
                   />
                 </div>
+
+                {/* Step 5: Contact Information */}
+                <div className="bg-card rounded-2xl border border-border p-6 shadow-card animate-slide-up" style={{ animationDelay: '400ms' }}>
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="h-8 w-8 rounded-full gradient-primary flex items-center justify-center text-primary-foreground font-bold text-sm">
+                      5
+                    </div>
+                    <h2 className="font-display text-xl font-semibold">Contact Information</h2>
+                    <span className="text-sm text-muted-foreground">(Optional)</span>
+                  </div>
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email Address</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="you@example.com"
+                        value={customerEmail}
+                        onChange={(e) => setCustomerEmail(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">Phone Number</Label>
+                      <Input
+                        id="phone"
+                        type="tel"
+                        placeholder="+234 800 000 0000"
+                        value={customerPhone}
+                        onChange={(e) => setCustomerPhone(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Summary Sidebar */}
-              <div className="animate-slide-up" style={{ animationDelay: '400ms' }}>
+              <div className="animate-slide-up" style={{ animationDelay: '500ms' }}>
                 <BookingSummary
                   vehicleType={vehicleType}
                   licensePlate={licensePlate}
@@ -149,6 +221,7 @@ const BookingPage = () => {
                   duration={duration}
                   selectedAddons={selectedAddons}
                   onConfirm={handleConfirmBooking}
+                  isLoading={createBooking.isPending}
                 />
               </div>
             </div>
