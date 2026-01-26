@@ -3,6 +3,17 @@ from sqlalchemy import Column, String, Integer, Boolean, DECIMAL, ForeignKey, Da
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from database import Base
+from sqlalchemy import Column, Integer, String, Boolean
+# Keep your existing imports (Base, etc.)
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String, unique=True, index=True)
+    hashed_password = Column(String)
+    is_active = Column(Boolean, default=True)
+    is_admin = Column(Boolean, default=False)
 
 # Junction Table for Booking <-> Addons
 booking_addons = Table(

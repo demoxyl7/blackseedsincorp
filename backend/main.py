@@ -1,5 +1,8 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from models import User, Base, SessionLocal, engine
+import os
+from dotenv import load_dotenv
 from sqlalchemy import func, desc
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Optional
@@ -9,6 +12,7 @@ import datetime
 from database import engine, get_db, Base
 import models, schemas
 
+load_dotenv() # Load env vars
 # Initialize Database Tables
 models.Base.metadata.create_all(bind=engine)
 
@@ -227,3 +231,29 @@ def get_recent_bookings(limit: int = 100, db: Session = Depends(get_db)):
         .limit(limit)\
         .all()
     return bookings
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def create_default_admin():
+    db = SessionLocal()
+    try:
+        admin_email = os.getenv("ADMIN_EMAIL", "admin@blackseeds.com")
+        existing_admin = db.query(User).filter(User.email == admin_email).first()
+        
+        if not existing_admin:
+            print(f"Creating default admin: {admin_email}")
+            hashed_pw = pwd_context.hash("admin123") # Default password
+            new_admin = User(email=admin_email, hashed_password=hashed_pw, is_admin=True)
+            db.add(new_admin)
+            db.commit()
+            print("Admin created successfully!")
+        else:
+            print("Admin already exists.")
+    except Exception as e:
+        print(f"Error creating admin: {e}")
+    finally:
+        db.close()
+
+# Run this just once when the file loads to ensure admin exists
+# (In a real app, you might use a separate script, but this works for now)
+Base.metadata.create_all(bind=engine) # Ensure tables exist
+create_default_admin()    
