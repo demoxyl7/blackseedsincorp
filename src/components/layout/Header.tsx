@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Car, Menu, X, User, LayoutDashboard } from 'lucide-react';
+import { Car, Menu, X, User, LayoutDashboard, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
 
 const navLinks = [
   { href: '/', label: 'Home' },
@@ -14,6 +15,7 @@ const navLinks = [
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
+  const { isAuthenticated, admin, logout } = useAuth();
 
   return (
     <header className="sticky top-0 z-50 glass border-b border-border/50">
@@ -49,18 +51,35 @@ export function Header() {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-3">
-            <Link to="/admin">
-              <Button variant="ghost" size="sm">
-                <LayoutDashboard className="h-4 w-4 mr-1" />
-                Admin
-              </Button>
-            </Link>
-            <Link to="/login">
-              <Button variant="outline" size="sm">
-                <User className="h-4 w-4 mr-1" />
-                Sign In
-              </Button>
-            </Link>
+            {isAuthenticated ? (
+              <>
+                <Link to="/admin">
+                  <Button variant="ghost" size="sm">
+                    <LayoutDashboard className="h-4 w-4 mr-1" />
+                    Dashboard
+                  </Button>
+                </Link>
+                <Button variant="outline" size="sm" onClick={logout}>
+                  <LogOut className="h-4 w-4 mr-1" />
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link to="/admin">
+                  <Button variant="ghost" size="sm">
+                    <LayoutDashboard className="h-4 w-4 mr-1" />
+                    Admin
+                  </Button>
+                </Link>
+                <Link to="/login">
+                  <Button variant="outline" size="sm">
+                    <User className="h-4 w-4 mr-1" />
+                    Sign In
+                  </Button>
+                </Link>
+              </>
+            )}
             <Link to="/book">
               <Button variant="gradient" size="sm">
                 Book Now
@@ -100,14 +119,21 @@ export function Header() {
                 <Link to="/admin" className="flex-1" onClick={() => setIsMenuOpen(false)}>
                   <Button variant="ghost" className="w-full">
                     <LayoutDashboard className="h-4 w-4 mr-1" />
-                    Admin
+                    {isAuthenticated ? 'Dashboard' : 'Admin'}
                   </Button>
                 </Link>
-                <Link to="/login" className="flex-1" onClick={() => setIsMenuOpen(false)}>
-                  <Button variant="outline" className="w-full">
-                    Sign In
+                {isAuthenticated ? (
+                  <Button variant="outline" className="flex-1" onClick={() => { logout(); setIsMenuOpen(false); }}>
+                    <LogOut className="h-4 w-4 mr-1" />
+                    Logout
                   </Button>
-                </Link>
+                ) : (
+                  <Link to="/login" className="flex-1" onClick={() => setIsMenuOpen(false)}>
+                    <Button variant="outline" className="w-full">
+                      Sign In
+                    </Button>
+                  </Link>
+                )}
               </div>
               <Link to="/book" onClick={() => setIsMenuOpen(false)}>
                 <Button variant="gradient" className="w-full mt-2">
