@@ -1,13 +1,57 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Car, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Car, Mail, Lock, Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useAuth } from '@/contexts/AuthContext';
+import { z } from 'zod';
+
+const loginSchema = z.object({
+  email: z.string().email('Please enter a valid email'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+});
 
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [isLogin, setIsLogin] = useState(true);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const { login, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  const from = (location.state as any)?.from?.pathname || '/admin';
+
+  // Redirect if already authenticated
+  if (isAuthenticated) {
+    navigate(from, { replace: true });
+    return null;
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    // Validate input
+    const validation = loginSchema.safeParse({ email, password });
+    if (!validation.success) {
+      setError(validation.error.errors[0].message);
+      return;
+    }
+
+    setIsLoading(true);
+    const result = await login(email, password);
+    setIsLoading(false);
+
+    if (result.success) {
+      navigate(from, { replace: true });
+    } else {
+      setError(result.error || 'Login failed');
+    }
+  };
 
   return (
     <div className="min-h-screen flex">
@@ -25,29 +69,34 @@ const LoginPage = () => {
           </Link>
 
           <div className="mb-8">
-            <h1 className="font-display text-3xl font-bold mb-2">
-              {isLogin ? 'Welcome back' : 'Create an account'}
-            </h1>
+            <h1 className="font-display text-3xl font-bold mb-2">Admin Login</h1>
             <p className="text-muted-foreground">
-              {isLogin
-                ? 'Sign in to manage your parking bookings'
-                : 'Start booking parking spots in seconds'}
+              Sign in to access the admin dashboard
             </p>
           </div>
 
-          <form className="space-y-6">
-            {!isLogin && (
-              <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
-                <Input id="name" placeholder="John Doe" />
-              </div>
-            )}
+          {error && (
+            <div className="mb-6 p-4 bg-destructive/10 border border-destructive/20 rounded-lg flex items-center gap-3 text-destructive">
+              <AlertCircle className="h-5 w-5 flex-shrink-0" />
+              <p className="text-sm">{error}</p>
+            </div>
+          )}
 
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input id="email" type="email" placeholder="you@example.com" className="pl-10" />
+                <Input 
+                  id="email" 
+                  type="email" 
+                  placeholder="admin@blackseeds.com" 
+                  className="pl-10"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={isLoading}
+                  required
+                />
               </div>
             </div>
 
@@ -60,6 +109,10 @@ const LoginPage = () => {
                   type={showPassword ? 'text' : 'password'}
                   placeholder="••••••••"
                   className="pl-10 pr-10"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={isLoading}
+                  required
                 />
                 <button
                   type="button"
@@ -71,33 +124,22 @@ const LoginPage = () => {
               </div>
             </div>
 
-            {isLogin && (
-              <div className="flex items-center justify-between text-sm">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" className="rounded border-border" />
-                  <span className="text-muted-foreground">Remember me</span>
-                </label>
-                <a href="#" className="text-primary hover:underline">
-                  Forgot password?
-                </a>
-              </div>
-            )}
-
-            <Button variant="hero" size="xl" className="w-full">
-              {isLogin ? 'Sign In' : 'Create Account'}
+            <Button variant="hero" size="xl" className="w-full" disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Signing In...
+                </>
+              ) : (
+                'Sign In'
+              )}
             </Button>
           </form>
 
           <div className="mt-8 text-center">
-            <p className="text-muted-foreground">
-              {isLogin ? "Don't have an account?" : 'Already have an account?'}{' '}
-              <button
-                onClick={() => setIsLogin(!isLogin)}
-                className="text-primary font-medium hover:underline"
-              >
-                {isLogin ? 'Sign up' : 'Sign in'}
-              </button>
-            </p>
+            <Link to="/" className="text-primary font-medium hover:underline">
+              ← Back to Home
+            </Link>
           </div>
         </div>
       </div>
@@ -109,10 +151,10 @@ const LoginPage = () => {
             <Car className="h-12 w-12 text-primary-foreground" />
           </div>
           <h2 className="font-display text-3xl font-bold text-primary-foreground mb-4">
-            Smart Parking Made Easy
+            Admin Portal
           </h2>
           <p className="text-muted-foreground">
-            Book your spot, add services, and pay securely. All from one simple platform.
+            Manage bookings, respond to customer chats, and oversee all parking operations from one dashboard.
           </p>
         </div>
       </div>
