@@ -54,3 +54,17 @@ class PricingResponse(BaseModel):
     ev_charging_per_hour: float
     car_wash_basic: float
     car_wash_premium: float
+
+# --- Auth Schemas ---
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str
+    user: dict
+
+class UserResponse(BaseModel):
+    email: str
+    is_admin: bool
