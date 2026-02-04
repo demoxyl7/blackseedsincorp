@@ -1,318 +1,157 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status, WebSocket, WebSocketDisconnect
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from models import User
+from datetime import datetime, timedelta, date, time
+from typing import List, Dict, Optional
+import json
+import uuid
 import os
 from dotenv import load_dotenv
-from sqlalchemy import func, desc
-from fastapi.middleware.cors import CORSMiddleware
-from typing import List, Optional
-import uuid
-import datetime
 from passlib.context import CryptContext
-from jose import JWTError, jwt
+from jose import jwt, JWTError # Correct library for FastAPI
 
-from database import engine, get_db, Base, SessionLocal
+# Local imports
+from database import engine, get_db
 import models, schemas
+from models import User
 
-load_dotenv() # Load env vars
-# Initialize Database Tables
+load_dotenv()
+
+# --- 1. CONFIGURATION ---
+# Use one source of truth for your security settings
+SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-very-secret-key-change-this")
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
+
+# Initialize Database
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Parking Management API")
 
-# CORS Setup
+# --- 2. CORS CONFIGURATION ---
+origins = [
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://localhost:8081",
+    "http://127.0.0.1:8081",
+    "https://blackseedsincorp.onrender.com",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], 
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# --- 1. SEED DATA (Now includes B3, B4, B5) ---
-@app.on_event("startup")
-def startup_event():
-    db = next(get_db())
-    
-    # 1. SMART SPOT GENERATOR (Creates A1-A10, B1-B10... up to E10)
-    if not db.query(models.ParkingSpot).first():
-        spots = []
-        rows = ['A', 'B', 'C', 'D', 'E'] # Add 'F', 'G' if you need more floors
-        
-        for row in rows:
-            for num in range(1, 11): # Creates spots 1 through 10
-                spot_name = f"{row}{num}"
-                
-                # Logic to decide spot type (Optional: Customize as needed)
-                is_ev = (row == 'A' and num in [3, 4]) # Make A3 and A4 Electric
-                spot_type = "ev" if is_ev else "standard"
-                
-                spots.append(models.ParkingSpot(
-                    spot_number=spot_name,
-                    floor=1,
-                    type=spot_type,
-                    has_ev_charger=is_ev
-                ))
-        
-        db.add_all(spots)
-        db.commit()
-        print(f"✅ Successfully created {len(spots)} parking spots (A1 - E10)!")
-
-    # 2. Check & Add Pricing (Same as before)
-    if not db.query(models.PricingConfig).first():
-        pricing = models.PricingConfig(
-            hourly_rate=500.0,
-            suv_surcharge=200.0,
-            ev_charging_per_hour=800.0,
-            car_wash_basic=1500.0,
-            car_wash_premium=4500.0
-        )
-        db.add(pricing)
-        db.commit()
-
-    # 3. Check & Add Addons (Same as before)
-    if not db.query(models.AddonService).first():
-        addons = [
-            models.AddonService(name="Basic Car Wash", price=1500.00, duration_minutes=30),
-            models.AddonService(name="EV Charging", price=800.00, icon="zap"),
-            models.AddonService(name="Premium Detailing", price=4500.00, duration_minutes=60)
-        ]
-        db.add_all(addons)
-        db.commit()
-
-# --- 2. CORE ENDPOINTS ---
-
-@app.get("/api/v1/spots", response_model=List[schemas.SpotResponse])
-def get_spots(db: Session = Depends(get_db)):
-    return db.query(models.ParkingSpot).all()
-
-@app.get("/api/v1/spots/available", response_model=List[schemas.SpotResponse])
-def get_available_spots(
-    date: Optional[datetime.date] = None,
-    start_time: Optional[datetime.time] = None,
-    duration_hours: Optional[int] = None,
-    is_electric: Optional[bool] = None,
-    db: Session = Depends(get_db)
-):
-    query = db.query(models.ParkingSpot)
-    if is_electric is not None:
-        query = query.filter(models.ParkingSpot.has_ev_charger == is_electric)
-    return query.all()
-
-@app.get("/api/v1/addons", response_model=List[schemas.AddonResponse])
-def get_addons(db: Session = Depends(get_db)):
-    return db.query(models.AddonService).all()
-
-@app.get("/api/v1/pricing", response_model=schemas.PricingResponse)
-def get_pricing(db: Session = Depends(get_db)):
-    pricing = db.query(models.PricingConfig).first()
-    if not pricing:
-        return schemas.PricingResponse(
-            hourly_rate=500.0, suv_surcharge=200.0, 
-            ev_charging_per_hour=800.0, car_wash_basic=1500.0, 
-            car_wash_premium=4500.0
-        )
-    return pricing
-
-@app.post("/api/v1/bookings", response_model=schemas.BookingResponse)
-def create_booking(booking: schemas.BookingCreate, db: Session = Depends(get_db)):
-    print(f"🔍 DEBUG: Processing booking for spot {booking.spot_id}")
-
-    # 1. Handle Spot ID
-    spot = db.query(models.ParkingSpot).filter(models.ParkingSpot.spot_number == booking.spot_id).first()
-    
-    if not spot:
-        try:
-            spot = db.query(models.ParkingSpot).filter(models.ParkingSpot.id == booking.spot_id).first()
-        except:
-            pass 
-            
-    if not spot:
-        print(f"❌ ERROR: Spot {booking.spot_id} not found in DB")
-        raise HTTPException(status_code=404, detail=f"Spot '{booking.spot_id}' not found. Please refresh page.")
-    
-    # 2. Handle Addons
-    selected_addons = []
-    if booking.addon_ids:
-        slug_map = {
-            "car-wash-basic": "Basic Car Wash",
-            "car-wash-premium": "Premium Detailing",
-            "ev-charging": "EV Charging",
-            "premium-spot": "Premium Spot" # Just in case you have this
-        }
-        for addon_input in booking.addon_ids:
-            db_name = slug_map.get(addon_input, addon_input)
-            addon = db.query(models.AddonService).filter(models.AddonService.name == db_name).first()
-            if addon:
-                selected_addons.append(addon)
-
-    # 3. Calculate Costs
-    pricing = db.query(models.PricingConfig).first()
-    if not pricing:
-         pricing = models.PricingConfig() 
-
-    base_cost = float(pricing.hourly_rate) * booking.duration_hours
-    if booking.vehicle_type == 'suv':
-        base_cost += float(pricing.suv_surcharge)
-        
-    addons_cost = 0
-    for addon in selected_addons:
-        addons_cost += float(addon.price)
-
-    total_cost = base_cost + addons_cost
-    
-    # 4. Time Calculation
-    start_dt = datetime.datetime.combine(booking.booking_date, booking.start_time)
-    end_dt = start_dt + datetime.timedelta(hours=booking.duration_hours)
-    
-    # 5. Save Booking
-    new_booking = models.Booking(
-        booking_ref=f"BK-{uuid.uuid4().hex[:8].upper()}",
-        vehicle_type=booking.vehicle_type,
-        license_plate=booking.license_plate,
-        is_electric=booking.is_electric,
-        spot_id=spot.id,
-        booking_date=booking.booking_date,
-        start_time=booking.start_time,
-        end_time=end_dt.time(),
-        duration_hours=booking.duration_hours,
-        base_price=base_cost,
-        addons_total=addons_cost,
-        total_price=total_cost,
-        customer_email=booking.customer_email,
-        customer_phone=booking.customer_phone,
-        status="confirmed"
-    )
-    
-    db.add(new_booking)
-    db.commit()
-    db.refresh(new_booking)
-
-    # 6. Save Addon Links
-    if selected_addons:
-        for addon in selected_addons:
-            stmt = models.booking_addons.insert().values(
-                booking_id=new_booking.id,
-                addon_id=addon.id,
-                price_at_booking=addon.price
-            )
-            db.execute(stmt)
-        db.commit()
-        db.refresh(new_booking)
-    
-    # THIS RETURN STATEMENT WAS LIKELY MISSING OR BROKEN
-    return new_booking
-
-@app.get("/api/v1/bookings", response_model=List[schemas.BookingResponse])
-def get_bookings(db: Session = Depends(get_db)):
-    return db.query(models.Booking).order_by(desc(models.Booking.created_at)).all()
-
-# --- 3. DASHBOARD ENDPOINTS ---
-
-@app.get("/api/v1/dashboard/stats")
-def get_dashboard_stats(db: Session = Depends(get_db)):
-    total_revenue = db.query(func.sum(models.Booking.total_price)).scalar() or 0
-    total_bookings = db.query(models.Booking).count()
-    active_spots = db.query(models.ParkingSpot).count()
-    
-    utilization = 0
-    if active_spots > 0:
-        utilization = round((total_bookings % 10) / active_spots * 100, 1)
-
-    return {
-        "total_revenue": total_revenue,
-        "total_bookings": total_bookings,
-        "active_spots": active_spots,
-        "utilization_rate": utilization
-    }
-
-@app.get("/api/v1/dashboard/recent-bookings")
-def get_recent_bookings(limit: int = 100, db: Session = Depends(get_db)):
-    bookings = db.query(models.Booking)\
-        .order_by(desc(models.Booking.created_at))\
-        .limit(limit)\
-        .all()
-    return bookings
-
-# --- 4. AUTHENTICATION ---
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
-
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", "supersecretkey12345")
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
-
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
-
-def create_access_token(data: dict) -> str:
+# --- 3. HELPER FUNCTIONS ---
+def create_access_token(data: dict):
     to_encode = data.copy()
-    expire = datetime.datetime.utcnow() + datetime.timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
-def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        email: str = payload.get("sub")
-        if email is None:
-            raise credentials_exception
-    except JWTError:
-        raise credentials_exception
-    
-    user = db.query(User).filter(User.email == email).first()
-    if user is None:
-        raise credentials_exception
-    return user
+# --- 4. CHAT MANAGER ---
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: Dict[str, WebSocket] = {}
+        self.admin_connection: Optional[WebSocket] = None
 
+    async def connect(self, websocket: WebSocket, client_id: str):
+        await websocket.accept()
+        self.active_connections[client_id] = websocket
+
+    async def connect_admin(self, websocket: WebSocket):
+        await websocket.accept()
+        self.admin_connection = websocket
+
+    def disconnect(self, client_id: str):
+        if client_id in self.active_connections:
+            del self.active_connections[client_id]
+
+    def disconnect_admin(self):
+        self.admin_connection = None
+
+    async def broadcast_to_admin(self, message: dict):
+        if self.admin_connection:
+            try:
+                await self.admin_connection.send_json(message)
+            except:
+                self.admin_connection = None
+
+    async def broadcast_to_client(self, client_id: str, message: dict):
+        if client_id in self.active_connections:
+            try:
+                await self.active_connections[client_id].send_json(message)
+            except:
+                del self.active_connections[client_id]
+
+manager = ConnectionManager()
+
+# --- 5. AUTH & LOGIN ---
 @app.post("/api/v1/auth/login")
-def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+async def login(
+    form_data: OAuth2PasswordRequestForm = Depends(), 
+    db: Session = Depends(get_db)
+):
     user = db.query(User).filter(User.email == form_data.username).first()
-    if not user or not verify_password(form_data.password, user.hashed_password):
+    
+    if not user or not pwd_context.verify(form_data.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
-            headers={"WWW-Authenticate": "Bearer"},
         )
     
-    access_token = create_access_token(data={"sub": user.email, "is_admin": user.is_admin})
+    access_token = create_access_token(data={"sub": user.email})
     return {
         "access_token": access_token,
         "token_type": "bearer",
-        "user": {"email": user.email, "is_admin": user.is_admin}
+        "user": {
+            "email": user.email, 
+            "is_admin": user.is_admin,
+            "name": getattr(user, 'name', 'Admin') # Fallback if name field is missing
+        }
     }
 
-@app.get("/api/v1/auth/me")
-def get_me(current_user: User = Depends(get_current_user)):
-    return {"email": current_user.email, "is_admin": current_user.is_admin}
-
-def create_default_admin():
-    db = SessionLocal()
+# --- 6. WEBSOCKET CHAT ROUTES ---
+@app.websocket("/ws/chat/{session_id}")
+async def websocket_endpoint(websocket: WebSocket, session_id: str):
+    await manager.connect(websocket, session_id)
     try:
-        admin_email = os.getenv("ADMIN_EMAIL", "admin@blackseeds.com")
-        existing_admin = db.query(User).filter(User.email == admin_email).first()
-        
-        if not existing_admin:
-            print(f"Creating default admin: {admin_email}")
-            hashed_pw = pwd_context.hash("admin123") # Default password
-            new_admin = User(email=admin_email, hashed_password=hashed_pw, is_admin=True)
-            db.add(new_admin)
-            db.commit()
-            print("Admin created successfully!")
-        else:
-            print("Admin already exists.")
-    except Exception as e:
-        print(f"Error creating admin: {e}")
-    finally:
-        db.close()
+        while True:
+            data = await websocket.receive_text()
+            message_data = json.loads(data)
+            await manager.broadcast_to_admin({
+                "type": "message",
+                "sessionId": session_id,
+                "text": message_data.get("text"),
+                "sender": "customer",
+                "timestamp": datetime.now().isoformat()
+            })
+    except WebSocketDisconnect:
+        manager.disconnect(session_id)
 
-# Run this just once when the file loads to ensure admin exists
-# (In a real app, you might use a separate script, but this works for now)
-Base.metadata.create_all(bind=engine) # Ensure tables exist
-create_default_admin()    
+@app.websocket("/ws/admin")
+async def admin_websocket_endpoint(websocket: WebSocket):
+    await manager.connect_admin(websocket)
+    try:
+        while True:
+            data = await websocket.receive_text()
+            message_data = json.loads(data)
+            if message_data.get("type") == "reply":
+                target_sid = message_data.get("sessionId")
+                await manager.broadcast_to_client(target_sid, {
+                    "type": "message",
+                    "text": message_data.get("text"),
+                    "sender": "admin",
+                    "timestamp": datetime.now().isoformat()
+                })
+    except WebSocketDisconnect:
+        manager.disconnect_admin()
+
+# (Include your other endpoints like /spots/available here...)

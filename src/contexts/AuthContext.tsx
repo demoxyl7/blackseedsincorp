@@ -12,7 +12,7 @@ interface AuthContextType {
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: any }>;
   logout: () => void;
 }
 
@@ -23,7 +23,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Check for existing token on mount
   useEffect(() => {
     const storedToken = localStorage.getItem('admin_token');
     if (storedToken) {
@@ -36,49 +35,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const validateToken = async (storedToken: string) => {
     try {
       const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.API_VERSION}/auth/me`, {
-        headers: {
-          'Authorization': `Bearer ${storedToken}`,
-        },
+        headers: { 'Authorization': `Bearer ${storedToken}` },
       });
-
       if (response.ok) {
         const data = await response.json();
         setAdmin(data);
         setToken(storedToken);
       } else {
-        // Token is invalid, clear it
         localStorage.removeItem('admin_token');
       }
     } catch (error) {
-      console.error('Token validation failed:', error);
       localStorage.removeItem('admin_token');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+  const login = async (email: string, password: string): Promise<{ success: boolean; error?: any }> => {
     try {
+      // FIX: FastAPI OAuth2 expects form-url-encoded, not JSON
+      const formData = new URLSearchParams();
+      formData.append('username', email); 
+      formData.append('password', password);
+
       const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.API_VERSION}/auth/login`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: formData.toString(),
       });
 
       const data = await response.json();
 
       if (response.ok) {
         setToken(data.access_token);
-        setAdmin(data.admin);
+        setAdmin(data.user || { email, id: 'admin', name: 'Admin' });
         localStorage.setItem('admin_token', data.access_token);
         return { success: true };
       } else {
         return { success: false, error: data.detail || 'Invalid credentials' };
       }
     } catch (error) {
-      console.error('Login failed:', error);
       return { success: false, error: 'Connection failed. Is the backend running?' };
     }
   };
@@ -90,25 +86,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider
-      value={{
-        admin,
-        token,
-        isAuthenticated: !!admin && !!token,
-        isLoading,
-        login,
-        logout,
-      }}
-    >
+    <AuthContext.Provider value={{ admin, token, isAuthenticated: !!admin && !!token, isLoading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
 }
 
-export function useAuth() {
+export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (context === undefined) throw new Error('useAuth must be used within an AuthProvider');
   return context;
-}
+};
